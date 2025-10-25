@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="SQLBasic.web は SQL を段階的に学習できるインタラクティブな Web サービスです。カリキュラムとサンプルクエリで効率的にスキルを習得しましょう。" />
+    <title>SQLBasic.web | 学習用 SQL Web サービス</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+    <header>
+        <div class="container nav">
+            <div class="nav-brand">SQLBasic.web</div>
+            <nav id="primaryNavigation" class="nav-links">
+                <a href="#curriculum">カリキュラム</a>
+                <a href="#lab">SQL ラボ</a>
+                <a href="#faq">FAQ</a>
+            </nav>
+            <div class="controls">
+                <button id="themeToggle" type="button" aria-pressed="false">ダークモード</button>
+                <button id="menuToggle" type="button" aria-expanded="false" aria-controls="primaryNavigation">メニュー</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <div class="hero-text">
+                <h1>SQL の基礎を、Web で直感的に学ぶ</h1>
+                <p>
+                    SQLBasic.web は、学習フェーズを段階的に進めながら、インタラクティブにクエリを試せる学習用 Web サービスです。
+                    実務につながる SQL を、短時間でキャッチアップできるように設計しています。
+                </p>
+                <div class="hero-actions">
+                    <a class="button primary" href="#lab">今すぐ体験する</a>
+                    <a class="button secondary" href="#curriculum">学習ロードマップを見る</a>
+                </div>
+            </div>
+            <div class="card card--skill">
+                <h3>スキルマップ</h3>
+                <p>SQLBasic.web では、以下 3 つの観点でスキル定着を促します。</p>
+                <ul>
+                    <li>基本構文の理解 (SELECT / WHERE / ORDER BY ...)</li>
+                    <li>データ抽出の最適化 (JOIN / GROUP BY / 集計)</li>
+                    <li>実務シナリオでの応用 (サブクエリ / ウィンドウ関数)</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="feature-grid" aria-label="主要機能">
+            <article class="card">
+                <h3>ステップ学習</h3>
+                <p>学習フェーズは初級・中級・上級に分かれており、各フェーズで SQL の理解度を確認するチェックポイントを用意しています。</p>
+            </article>
+            <article class="card">
+                <h3>クエリの試行</h3>
+                <p>仮想のサンプルデータベースに対してクエリを実行し、即座に結果を可視化。学習内容をそのまま手を動かして体験できます。</p>
+            </article>
+            <article class="card">
+                <h3>学習ログ</h3>
+                <p>ユーザー単位で学習履歴とクエリ実行ログを保存し、復習や進捗管理をサポートします。</p>
+            </article>
+        </section>
+
+        <section id="curriculum" aria-labelledby="curriculum-heading">
+            <div class="section-title">
+                <span>Curriculum</span>
+                <h2 id="curriculum-heading">学習カリキュラム</h2>
+            </div>
+            <div class="timeline" id="timeline"></div>
+        </section>
+
+        <section id="lab" class="sql-lab" aria-labelledby="lab-heading">
+            <div class="lab-panel">
+                <div class="section-title section-title--compact">
+                    <span>SQL Lab</span>
+                    <h2 id="lab-heading">サンプルクエリを試す</h2>
+                </div>
+                <p>フェーズに応じたクエリテンプレートを選択すると、自動的にエディタへ挿入されます。</p>
+                <div class="query-buttons" id="queryButtons"></div>
+                <label for="queryEditor" class="visually-hidden">SQL エディタ</label>
+                <textarea id="queryEditor" aria-label="SQL エディタ"></textarea>
+                <button class="button primary" id="runQuery" type="button">実行イメージを見る</button>
+            </div>
+            <div class="lab-panel" aria-live="polite">
+                <h3>結果プレビュー</h3>
+                <p id="resultDescription">クエリを選択すると、想定される出力と学習ポイントを表示します。</p>
+                <ul id="resultHighlights"></ul>
+            </div>
+        </section>
+
+        <section id="faq" class="faq" aria-labelledby="faq-heading">
+            <div class="section-title">
+                <span>FAQ</span>
+                <h2 id="faq-heading">よくある質問</h2>
+            </div>
+            <details>
+                <summary>実際にデータベースへ接続できますか？</summary>
+                <p>学習用の仮想データベースを用意しており、本番環境のデータベースには接続しません。安心して学習に集中できます。</p>
+            </details>
+            <details>
+                <summary>学習時間の目安はどれくらいですか？</summary>
+                <p>初級から上級までの全フェーズを通じて、およそ 12〜16 時間を想定しています。週末集中コースや平日夜間コースなどの学習プランも提供予定です。</p>
+            </details>
+            <details>
+                <summary>チームで学習することは可能ですか？</summary>
+                <p>はい。チームでの学習進捗を可視化できるダッシュボード機能を提供予定です。管理者はメンバーごとの進捗状況と解答内容を確認できます。</p>
+            </details>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2024 SQLBasic.web. All rights reserved.</p>
+    </footer>
+
+    <script src="js/app.js" defer></script>
+</body>
+</html>
