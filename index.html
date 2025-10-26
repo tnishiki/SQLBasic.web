@@ -83,12 +83,13 @@
                 <div class="query-buttons" id="queryButtons"></div>
                 <label id="queryEditorLabel" class="visually-hidden">SQL エディタ</label>
                 <div id="queryEditor" class="code-editor" role="textbox" aria-labelledby="queryEditorLabel" aria-multiline="true"></div>
-                <button class="button primary" id="runQuery" type="button">実行イメージを見る</button>
+                <button class="button primary" id="runQuery" type="button">クエリを実行</button>
             </div>
             <div class="lab-panel" aria-live="polite">
                 <h3>結果プレビュー</h3>
-                <p id="resultDescription">クエリを選択すると、想定される出力と学習ポイントを表示します。</p>
+                <p id="resultDescription">テンプレートを選択して SQL を編集し、「クエリを実行」で結果を確認できます。</p>
                 <ul id="resultHighlights"></ul>
+                <div id="queryResult" class="query-result" role="region" aria-live="polite"></div>
             </div>
         </section>
 
@@ -117,6 +118,7 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.js"></script>
     <script>
         window.monacoLoader = new Promise((resolve) => {
             require.config({
