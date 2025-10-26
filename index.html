@@ -79,22 +79,19 @@
                     <span>SQL Lab</span>
                     <h2 id="lab-heading">クエリを実行する</h2>
                 </div>
-                <div>
-                <label for="queryEditor" class="visually-hidden">SQL エディタ</label>
-                <textarea id="queryEditor" aria-label="SQL エディタ"></textarea>
-                </div>
-                <div>
-                <button class="button primary" id="runQuery" type="button">実行イメージを見る</button>
                 <p>フェーズに応じたクエリテンプレートを選択すると、自動的にエディタへ挿入されます。</p>
                 <div class="query-buttons" id="queryButtons"></div>
-                </div>
+                <label for="queryEditor" class="visually-hidden">SQL エディタ</label>
+                <textarea id="queryEditor" aria-label="SQL エディタ"></textarea>
+                <button class="button primary" id="runQuery" type="button">実行イメージを見る</button>
             </div>
         </section>
         <section id="lab-result" class="sql-lab" aria-labelledby="lab-heading">
             <div class="lab-panel" aria-live="polite">
                 <h3>結果プレビュー</h3>
-                <p id="resultDescription">クエリを選択すると、想定される出力と学習ポイントを表示します。</p>
+                <p id="resultDescription">テンプレートを選択して SQL を編集し、「クエリを実行」で結果を確認できます。</p>
                 <ul id="resultHighlights"></ul>
+                <div id="queryResult" class="query-result" role="region" aria-live="polite"></div>
             </div>
         </section>
 
@@ -122,6 +119,33 @@
         <p>© 2024 SQLBasic.web. All rights reserved.</p>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.js"></script>
+    <script>
+        window.monacoLoader = new Promise((resolve) => {
+            require.config({
+                paths: {
+                    vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs"
+                }
+            });
+
+            window.MonacoEnvironment = {
+                getWorkerUrl: function () {
+                    return (
+                        "data:text/javascript;charset=utf-8," +
+                        encodeURIComponent(`
+                            self.MonacoEnvironment = { baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/' };
+                            importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/base/worker/workerMain.js');
+                        `)
+                    );
+                }
+            };
+
+            require(["vs/editor/editor.main"], () => {
+                resolve();
+            });
+        });
+    </script>
     <script src="js/app.js" defer></script>
 </body>
 </html>
