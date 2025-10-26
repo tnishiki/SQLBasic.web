@@ -8,120 +8,206 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.15/dist/vuetify.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-    <header>
-        <div class="container nav">
-            <div class="nav-brand">SQLBasic.web</div>
-            <nav id="primaryNavigation" class="nav-links">
-                <a href="#curriculum">カリキュラム</a>
-                <a href="#lab">SQL ラボ</a>
-                <a href="#faq">FAQ</a>
-            </nav>
-            <div class="controls">
-                <button id="themeToggle" type="button" aria-pressed="false">ダークモード</button>
-                <button id="menuToggle" type="button" aria-expanded="false" aria-controls="primaryNavigation">メニュー</button>
-            </div>
-        </div>
-    </header>
+    <div id="app" v-cloak>
+        <v-app>
+            <v-navigation-drawer v-model="drawer" temporary location="right" class="d-md-none">
+                <v-list density="comfortable" nav>
+                    <v-list-item
+                        v-for="item in navLinks"
+                        :key="item.href"
+                        :href="item.href"
+                        @click="drawer = false"
+                        :title="item.label"
+                    ></v-list-item>
+                </v-list>
+            </v-navigation-drawer>
 
-    <main class="container">
-        <section class="hero">
-            <div class="hero-text">
-                <h1>SQLBasic on Web</h1>
-                <p>
-                    SQLBasic.web は、学習フェーズを段階的に進めながら、インタラクティブにクエリを試せる学習用 Web サービスです。
-                    実務につながる SQL を、短時間でキャッチアップできるように設計しています。
-                </p>
-                <div class="hero-actions">
-                    <a class="button primary" href="#lab">今すぐ体験する</a>
-                    <a class="button secondary" href="#curriculum">学習ロードマップを見る</a>
-                </div>
-            </div>
-            <div class="card card--skill">
-                <h3>スキルマップ</h3>
-                <p>SQLBasic.web では、以下 3 つの観点でスキル定着を促します。</p>
-                <ul>
-                    <li>基本構文の理解 (SELECT / WHERE / ORDER BY ...)</li>
-                    <li>データ抽出の最適化 (JOIN / GROUP BY / 集計)</li>
-                    <li>実務シナリオでの応用 (サブクエリ / ウィンドウ関数)</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="feature-grid" aria-label="主要機能">
-            <article class="card">
-                <h3>ステップ学習</h3>
-                <p>学習フェーズは初級・中級・上級に分かれており、各フェーズで SQL の理解度を確認するチェックポイントを用意しています。</p>
-            </article>
-            <article class="card">
-                <h3>クエリの試行</h3>
-                <p>仮想のサンプルデータベースに対してクエリを実行し、即座に結果を可視化。学習内容をそのまま手を動かして体験できます。</p>
-            </article>
-            <article class="card">
-                <h3>学習ログ</h3>
-                <p>ユーザー単位で学習履歴とクエリ実行ログを保存し、復習や進捗管理をサポートします。</p>
-            </article>
-        </section>
-
-        <section id="curriculum" aria-labelledby="curriculum-heading">
-            <div class="section-title">
-                <span>Curriculum</span>
-                <h2 id="curriculum-heading">学習カリキュラム</h2>
-            </div>
-            <div class="timeline" id="timeline"></div>
-        </section>
-
-        <section id="lab" class="sql-lab" aria-labelledby="lab-heading">
-            <div class="lab-panel">
-                <div class="lab-panel__editor">
-                    <div class="section-title section-title--compact">
-                        <span>SQL Lab</span>
-                        <h2 id="lab-heading">クエリを実行する</h2>
+            <v-app-bar flat elevation="0" color="surface" class="app-bar">
+                <v-container class="d-flex align-center py-0">
+                    <v-toolbar-title class="font-weight-bold">SQLBasic.web</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                    <div class="d-none d-md-flex align-center gap-4">
+                        <v-btn
+                            v-for="item in navLinks"
+                            :key="item.href"
+                            variant="text"
+                            :href="item.href"
+                            class="text-none"
+                        >
+                            {{ item.label }}
+                        </v-btn>
                     </div>
-                    <label for="queryEditor" class="visually-hidden">SQL エディタ</label>
-                    <textarea id="queryEditor" aria-label="SQL エディタ"></textarea>
-                </div>
-                <div class="lab-panel__controls">
-                    <p>フェーズに応じたクエリテンプレートを選択すると、自動的にエディタへ挿入されます。</p>
-                    <div class="query-buttons" id="queryButtons"></div>
-                    <button class="button primary" id="runQuery" type="button">実行イメージを見る</button>
-                </div>
-            </div>
-        </section>
-        <section id="lab-result" class="sql-lab" aria-labelledby="lab-heading">
-            <div class="lab-panel" aria-live="polite">
-                <h3>結果プレビュー</h3>
-                <p id="resultDescription">テンプレートを選択して SQL を編集し、「クエリを実行」で結果を確認できます。</p>
-                <ul id="resultHighlights"></ul>
-                <div id="queryResult" class="query-result" role="region" aria-live="polite"></div>
-            </div>
-        </section>
+                    <v-btn
+                        variant="outlined"
+                        class="ms-4 text-none"
+                        @click="toggleTheme"
+                        :aria-pressed="isDark"
+                    >
+                        <v-icon start>{{ themeIcon }}</v-icon>
+                        {{ themeButtonLabel }}
+                    </v-btn>
+                    <v-app-bar-nav-icon class="d-md-none ms-2" @click="drawer = !drawer" aria-label="メニューを開く"></v-app-bar-nav-icon>
+                </v-container>
+            </v-app-bar>
 
-        <section id="faq" class="faq" aria-labelledby="faq-heading">
-            <div class="section-title">
-                <span>FAQ</span>
-                <h2 id="faq-heading">よくある質問</h2>
-            </div>
-            <details>
-                <summary>実際にデータベースへ接続できますか？</summary>
-                <p>学習用の仮想データベースを用意しており、本番環境のデータベースには接続しません。安心して学習に集中できます。</p>
-            </details>
-            <details>
-                <summary>学習時間の目安はどれくらいですか？</summary>
-                <p>初級から上級までの全フェーズを通じて、およそ 12〜16 時間を想定しています。週末集中コースや平日夜間コースなどの学習プランも提供予定です。</p>
-            </details>
-            <details>
-                <summary>チームで学習することは可能ですか？</summary>
-                <p>はい。チームでの学習進捗を可視化できるダッシュボード機能を提供予定です。管理者はメンバーごとの進捗状況と解答内容を確認できます。</p>
-            </details>
-        </section>
-    </main>
+            <v-main>
+                <v-container class="py-12">
+                    <section class="hero" id="hero">
+                        <v-row align="stretch" class="g-8" justify="center">
+                            <v-col cols="12" md="7">
+                                <h1 class="text-h3 text-sm-h2 font-weight-bold mb-4">SQLBasic on Web</h1>
+                                <p class="text-body-1 text-medium-emphasis mb-6">
+                                    SQLBasic.web は、学習フェーズを段階的に進めながら、インタラクティブにクエリを試せる学習用 Web サービスです。
+                                    実務につながる SQL を、短時間でキャッチアップできるように設計しています。
+                                </p>
+                                <div class="hero-actions">
+                                    <v-btn color="primary" size="large" class="text-none" href="#lab">今すぐ体験する</v-btn>
+                                    <v-btn variant="outlined" size="large" class="text-none" href="#curriculum">学習ロードマップを見る</v-btn>
+                                </div>
+                            </v-col>
+                            <v-col cols="12" md="5">
+                                <v-card class="pa-6 skill-card" elevation="8">
+                                    <h3 class="text-h5 font-weight-medium mb-4">スキルマップ</h3>
+                                    <p class="text-body-2 text-medium-emphasis mb-4">SQLBasic.web では、以下 3 つの観点でスキル定着を促します。</p>
+                                    <v-list density="comfortable">
+                                        <v-list-item
+                                            v-for="(skill, index) in skillPoints"
+                                            :key="index"
+                                            prepend-icon="mdi-checkbox-marked-circle-outline"
+                                            :title="skill"
+                                        ></v-list-item>
+                                    </v-list>
+                                </v-card>
+                            </v-col>
+                        </v-row>
+                    </section>
 
-    <footer>
-        <p>© 2024 SQLBasic.web. All rights reserved.</p>
-    </footer>
+                    <section class="feature-grid" aria-label="主要機能">
+                        <v-row dense>
+                            <v-col cols="12" md="4" v-for="feature in features" :key="feature.title">
+                                <v-card class="pa-6 h-100" elevation="4">
+                                    <h3 class="text-h6 font-weight-medium mb-3">{{ feature.title }}</h3>
+                                    <p class="text-body-2 text-medium-emphasis">{{ feature.description }}</p>
+                                </v-card>
+                            </v-col>
+                        </v-row>
+                    </section>
+
+                    <section id="curriculum" aria-labelledby="curriculum-heading" class="mb-12">
+                        <div class="section-title mb-6">
+                            <span class="text-overline text-primary">Curriculum</span>
+                            <h2 id="curriculum-heading" class="text-h4 font-weight-bold">学習カリキュラム</h2>
+                        </div>
+                        <div class="timeline-grid">
+                            <v-card v-for="lesson in lessons" :key="lesson.phase" class="pa-6 timeline-item">
+                                <div class="d-flex align-center justify-space-between mb-4">
+                                    <h3 class="text-h6 font-weight-medium mb-0">{{ lesson.title }}</h3>
+                                    <v-chip color="primary" variant="tonal" class="text-body-2 text-none">
+                                        {{ lesson.phase }}・{{ lesson.duration }}
+                                    </v-chip>
+                                </div>
+                                <p class="text-body-2 text-medium-emphasis mb-4">{{ lesson.goal }}</p>
+                                <v-list density="compact">
+                                    <v-list-item
+                                        v-for="topic in lesson.topics"
+                                        :key="topic"
+                                        prepend-icon="mdi-circle-medium"
+                                        :title="topic"
+                                    ></v-list-item>
+                                </v-list>
+                            </v-card>
+                        </div>
+                    </section>
+
+                    <section id="lab" class="sql-lab mb-12" aria-labelledby="lab-heading">
+                        <div class="section-title mb-6">
+                            <span class="text-overline text-primary">SQL Lab</span>
+                            <h2 id="lab-heading" class="text-h4 font-weight-bold">クエリを実行する</h2>
+                        </div>
+                        <v-row align="stretch" class="g-6">
+                            <v-col cols="12" md="7">
+                                <v-card class="pa-0" elevation="6">
+                                    <div class="monaco-editor-container" ref="queryEditor" role="region" aria-label="SQL エディタ"></div>
+                                </v-card>
+                            </v-col>
+                            <v-col cols="12" md="5">
+                                <v-card class="pa-6" elevation="6">
+                                    <p class="text-body-2 text-medium-emphasis mb-4">
+                                        フェーズに応じたクエリテンプレートを選択すると、自動的にエディタへ挿入されます。
+                                    </p>
+                                    <div class="query-buttons mb-4">
+                                        <v-btn
+                                            v-for="template in queryTemplates"
+                                            :key="template.phase"
+                                            block
+                                            class="mb-3 text-none"
+                                            :color="selectedPhase === template.phase ? 'primary' : undefined"
+                                            :variant="selectedPhase === template.phase ? 'flat' : 'tonal'"
+                                            @click="applyQueryTemplate(template)"
+                                        >
+                                            {{ template.phase }}: {{ template.label }}
+                                        </v-btn>
+                                    </div>
+                                    <v-btn color="primary" block size="large" class="text-none" @click="runQuery">
+                                        <v-icon start>mdi-play-circle</v-icon>
+                                        クエリを実行
+                                    </v-btn>
+                                </v-card>
+                            </v-col>
+                        </v-row>
+                    </section>
+
+                    <section id="lab-result" class="sql-lab mb-12" aria-labelledby="lab-result-heading">
+                        <v-card class="pa-6" elevation="6">
+                            <h3 id="lab-result-heading" class="text-h5 font-weight-medium mb-3">結果プレビュー</h3>
+                            <p class="text-body-2 text-medium-emphasis mb-4">{{ resultDescription }}</p>
+                            <v-list v-if="resultHighlights.length" class="result-highlights mb-4" density="compact">
+                                <v-list-item v-for="(highlight, index) in resultHighlights" :key="index" :title="highlight"></v-list-item>
+                            </v-list>
+                            <div class="query-result-table">
+                                <v-table v-if="queryResult">
+                                    <thead>
+                                        <tr>
+                                            <th v-for="column in queryResult.columns" :key="column">{{ column }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(row, rowIndex) in queryResult.values" :key="rowIndex">
+                                            <td v-for="(cell, cellIndex) in row" :key="cellIndex">{{ cell === null ? 'NULL' : cell }}</td>
+                                        </tr>
+                                    </tbody>
+                                </v-table>
+                            </div>
+                        </v-card>
+                    </section>
+
+                    <section id="faq" class="faq mb-12" aria-labelledby="faq-heading">
+                        <div class="section-title mb-6">
+                            <span class="text-overline text-primary">FAQ</span>
+                            <h2 id="faq-heading" class="text-h4 font-weight-bold">よくある質問</h2>
+                        </div>
+                        <v-expansion-panels variant="accordion">
+                            <v-expansion-panel v-for="item in faqItems" :key="item.question">
+                                <v-expansion-panel-title>{{ item.question }}</v-expansion-panel-title>
+                                <v-expansion-panel-text>{{ item.answer }}</v-expansion-panel-text>
+                            </v-expansion-panel>
+                        </v-expansion-panels>
+                    </section>
+                </v-container>
+            </v-main>
+
+            <v-footer app class="py-6" color="transparent">
+                <v-container class="text-center text-medium-emphasis">
+                    © 2024 SQLBasic.web. All rights reserved.
+                </v-container>
+            </v-footer>
+        </v-app>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.js"></script>
@@ -150,6 +236,8 @@
             });
         });
     </script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.15/dist/vuetify.min.js"></script>
     <script src="js/app.js" defer></script>
 </body>
 </html>
