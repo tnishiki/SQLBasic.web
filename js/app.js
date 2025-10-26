@@ -1,6 +1,32 @@
-const themeToggle = document.getElementById("themeToggle");
-const menuToggle = document.getElementById("menuToggle");
-const body = document.body;
+const { createApp, ref, computed, onMounted, watch } = Vue;
+const { createVuetify, useTheme } = Vuetify;
+
+const navLinks = [
+  { label: "カリキュラム", href: "#curriculum" },
+  { label: "SQL ラボ", href: "#lab" },
+  { label: "FAQ", href: "#faq" }
+];
+
+const skillPoints = [
+  "基本構文の理解 (SELECT / WHERE / ORDER BY ...)",
+  "データ抽出の最適化 (JOIN / GROUP BY / 集計)",
+  "実務シナリオでの応用 (サブクエリ / ウィンドウ関数)"
+];
+
+const features = [
+  {
+    title: "ステップ学習",
+    description: "学習フェーズは初級・中級・上級に分かれており、各フェーズで SQL の理解度を確認するチェックポイントを用意しています。"
+  },
+  {
+    title: "クエリの試行",
+    description: "仮想のサンプルデータベースに対してクエリを実行し、即座に結果を可視化。学習内容をそのまま手を動かして体験できます。"
+  },
+  {
+    title: "学習ログ",
+    description: "ユーザー単位で学習履歴とクエリ実行ログを保存し、復習や進捗管理をサポートします。"
+  }
+];
 
 const lessons = [
   {
@@ -26,41 +52,56 @@ const lessons = [
   }
 ];
 
-const queries = {
-  初級: {
+const queryTemplates = [
+  {
+    phase: "初級",
     label: "顧客一覧を抽出",
     sql: `SELECT id, name, city\nFROM customers\nWHERE city = 'Tokyo'\nORDER BY name;`,
-    description:
-      "WHERE 句と ORDER BY を利用して、条件に合うレコードを抽出します。",
+    description: "WHERE 句と ORDER BY を利用して、条件に合うレコードを抽出します。",
     highlights: [
       "SELECT で取得する列を明示する",
       "WHERE 句でフィルター条件を指定する",
       "ORDER BY で並び替えを適用する"
     ]
   },
-  中級: {
+  {
+    phase: "中級",
     label: "受注金額の月次集計",
     sql: `SELECT strftime('%Y-%m', ordered_at) AS month,\n       SUM(amount) AS total_amount\nFROM orders\nGROUP BY month\nHAVING SUM(amount) > 500000\nORDER BY month;`,
-    description:
-      "GROUP BY と HAVING を使って月単位の売上を集計し、閾値を超える月を抽出します。",
+    description: "GROUP BY と HAVING を使って月単位の売上を集計し、閾値を超える月を抽出します。",
     highlights: [
       "strftime で日付を月単位に丸める",
       "SUM 関数で集計を行う",
       "HAVING で集計後の条件を設定する"
     ]
   },
-  上級: {
+  {
+    phase: "上級",
     label: "売上上位顧客の抽出",
     sql: `WITH ranked_customers AS (\n    SELECT\n        c.id,\n        c.name,\n        SUM(o.amount) AS revenue,\n        RANK() OVER (ORDER BY revenue DESC) AS revenue_rank\n    FROM customers AS c\n    JOIN orders AS o ON o.customer_id = c.id\n    GROUP BY c.id, c.name\n)\nSELECT *\nFROM ranked_customers\nWHERE revenue_rank <= 5;`,
-    description:
-      "共通テーブル式とウィンドウ関数を活用して、売上上位 5 名の顧客を抽出します。",
+    description: "共通テーブル式とウィンドウ関数を活用して、売上上位 5 名の顧客を抽出します。",
     highlights: [
       "WITH 句でクエリを分割し読みやすくする",
       "RANK ウィンドウ関数で順位を計算する",
       "最終 SELECT で上位データだけを取得する"
     ]
   }
-};
+];
+
+const faqItems = [
+  {
+    question: "実際にデータベースへ接続できますか？",
+    answer: "学習用の仮想データベースを用意しており、本番環境のデータベースには接続しません。安心して学習に集中できます。"
+  },
+  {
+    question: "学習時間の目安はどれくらいですか？",
+    answer: "初級から上級までの全フェーズを通じて、およそ 12〜16 時間を想定しています。週末集中コースや平日夜間コースなどの学習プランも提供予定です。"
+  },
+  {
+    question: "チームで学習することは可能ですか？",
+    answer: "はい。チームでの学習進捗を可視化できるダッシュボード機能を提供予定です。管理者はメンバーごとの進捗状況と解答内容を確認できます。"
+  }
+];
 
 const schemaSQL = `
 CREATE TABLE customers (
@@ -101,290 +142,245 @@ INSERT INTO orders (id, customer_id, amount, ordered_at) VALUES
   (11, 7, 150000, '2024-04-22');
 `;
 
-const timelineContainer = document.getElementById("timeline");
-const queryButtonsContainer = document.getElementById("queryButtons");
-const queryEditorContainer = document.getElementById("queryEditor");
-const resultDescription = document.getElementById("resultDescription");
-const resultHighlights = document.getElementById("resultHighlights");
-const runQueryButton = document.getElementById("runQuery");
-const navLinks = document.getElementById("primaryNavigation");
-const queryResultContainer = document.getElementById("queryResult");
-
-let monacoEditorInstance = null;
-let pendingEditorValue = "";
-let sqlModule = null;
-let databaseSeed = null;
-let databaseInitializationError = null;
-
-const databaseReady = (async () => {
-  if (typeof window.initSqlJs !== "function") {
-    throw new Error("SQL.js が読み込まれていません。");
+const vuetify = createVuetify({
+  theme: {
+    defaultTheme: "light",
+    themes: {
+      light: {
+        colors: {
+          background: "#f6f8fb",
+          surface: "#ffffff",
+          primary: "#2563eb",
+          secondary: "#64748b"
+        }
+      },
+      dark: {
+        colors: {
+          background: "#0f172a",
+          surface: "#111827",
+          primary: "#60a5fa",
+          secondary: "#94a3b8"
+        }
+      }
+    }
   }
-  const SQL = await window.initSqlJs({
-    locateFile: (file) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/${file}`
-  });
-  sqlModule = SQL;
-  const db = new SQL.Database();
-  db.exec(schemaSQL);
-  databaseSeed = db.export();
-  db.close();
-})();
-
-databaseReady.catch((error) => {
-  databaseInitializationError = error;
-  console.error("Failed to initialize SQL.js", error);
 });
 
-function renderTimeline() {
-  const fragment = document.createDocumentFragment();
-  lessons.forEach((lesson) => {
-    const wrapper = document.createElement("article");
-    wrapper.className = "timeline-item";
-    wrapper.innerHTML = `
-      <header>
-        <h3>${lesson.title}</h3>
-        <span class="badge">${lesson.phase}・${lesson.duration}</span>
-      </header>
-      <p>${lesson.goal}</p>
-      <ul>${lesson.topics.map((topic) => `<li>${topic}</li>`).join("")}</ul>
-    `;
-    fragment.appendChild(wrapper);
-  });
-  timelineContainer.appendChild(fragment);
-}
+createApp({
+  setup() {
+    const drawer = ref(false);
+    const queryEditor = ref(null);
+    const resultDescription = ref("テンプレートを選択して SQL を編集し、「クエリを実行」で結果を確認できます。");
+    const resultHighlights = ref([]);
+    const queryResult = ref(null);
+    const selectedPhase = ref(null);
 
-function renderQueryButtons() {
-  const fragment = document.createDocumentFragment();
-  Object.entries(queries).forEach(([phase, detail]) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.dataset.phase = phase;
-    button.textContent = `${phase}: ${detail.label}`;
-    button.addEventListener("click", () => applyQueryTemplate(phase));
-    fragment.appendChild(button);
-  });
-  queryButtonsContainer.appendChild(fragment);
-}
+    const theme = useTheme();
+    const isDark = computed(() => theme.global.name.value === "dark");
+    const themeButtonLabel = computed(() => (isDark.value ? "ライトモード" : "ダークモード"));
+    const themeIcon = computed(() => (isDark.value ? "mdi-weather-sunny" : "mdi-weather-night"));
 
-function applyQueryTemplate(phase) {
-  const template = queries[phase];
-  setEditorValue(template.sql);
-  focusEditor();
-  resultDescription.textContent = template.description;
-  renderHighlights(template.highlights);
-  clearQueryResult();
-  runQueryButton.focus();
-}
+    let monacoEditorInstance = null;
+    let pendingEditorValue = "";
+    let sqlModule = null;
+    let databaseSeed = null;
+    let databaseInitializationError = null;
 
-function renderHighlights(highlights) {
-  resultHighlights.innerHTML = "";
-  highlights.forEach((item) => {
-    const li = document.createElement("li");
-    li.textContent = item;
-    resultHighlights.appendChild(li);
-  });
-}
+    const databaseReady = (async () => {
+      if (typeof window.initSqlJs !== "function") {
+        throw new Error("SQL.js が読み込まれていません。");
+      }
+      const SQL = await window.initSqlJs({
+        locateFile: (file) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/${file}`
+      });
+      sqlModule = SQL;
+      const db = new SQL.Database();
+      db.exec(schemaSQL);
+      databaseSeed = db.export();
+      db.close();
+    })();
 
-function createDatabaseFromSeed() {
-  if (!sqlModule || !databaseSeed) {
-    return null;
-  }
-  return new sqlModule.Database(databaseSeed.slice());
-}
-
-function clearQueryResult() {
-  if (queryResultContainer) {
-    queryResultContainer.innerHTML = "";
-  }
-}
-
-function renderQueryResult(resultSet) {
-  if (!queryResultContainer) {
-    return;
-  }
-
-  queryResultContainer.innerHTML = "";
-
-  if (!resultSet.columns?.length) {
-    const message = document.createElement("p");
-    message.textContent = "結果は返されませんでした。";
-    queryResultContainer.appendChild(message);
-    return;
-  }
-
-  const table = document.createElement("table");
-  table.className = "sql-results-table";
-
-  const thead = document.createElement("thead");
-  const headerRow = document.createElement("tr");
-  resultSet.columns.forEach((column) => {
-    const th = document.createElement("th");
-    th.textContent = column;
-    headerRow.appendChild(th);
-  });
-  thead.appendChild(headerRow);
-  table.appendChild(thead);
-
-  const tbody = document.createElement("tbody");
-  resultSet.values.forEach((row) => {
-    const tr = document.createElement("tr");
-    row.forEach((value) => {
-      const td = document.createElement("td");
-      td.textContent = value === null ? "NULL" : String(value);
-      tr.appendChild(td);
+    databaseReady.catch((error) => {
+      databaseInitializationError = error;
+      console.error("Failed to initialize SQL.js", error);
     });
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
 
-  queryResultContainer.appendChild(table);
-}
-
-async function runQueryAgainstDatabase() {
-  const sql = getEditorValue().trim();
-  if (!sql) {
-    resultDescription.textContent = "クエリが入力されていません。テンプレートを選ぶか、SQL を記述してください。";
-    renderHighlights([]);
-    clearQueryResult();
-    return;
-  }
-
-  try {
-    await databaseReady;
-  } catch (error) {
-    const message = databaseInitializationError?.message || (error instanceof Error ? error.message : String(error));
-    resultDescription.textContent = "データベースの初期化に失敗しました。ページを再読み込みしてください。";
-    renderHighlights([message]);
-    clearQueryResult();
-    return;
-  }
-
-  const db = createDatabaseFromSeed();
-  if (!db) {
-    resultDescription.textContent = "データベースの初期化に失敗しました。";
-    renderHighlights([
-      databaseInitializationError?.message || "初期化処理を再度お試しください。"
-    ]);
-    clearQueryResult();
-    return;
-  }
-
-  try {
-    const resultSets = db.exec(sql);
-
-    if (!resultSets.length) {
-      resultDescription.textContent = "クエリは結果を返しませんでした。";
-      renderHighlights([]);
-      clearQueryResult();
-      return;
+    function setEditorValue(value) {
+      if (monacoEditorInstance) {
+        monacoEditorInstance.setValue(value);
+      } else {
+        pendingEditorValue = value;
+      }
     }
 
-    const [resultSet] = resultSets;
-    const rowCount = resultSet.values.length;
-    const columnCount = resultSet.columns.length;
-    resultDescription.textContent = `結果: ${rowCount} 行 / ${columnCount} 列`;
-    renderHighlights([
-      `列: ${resultSet.columns.join(", ")}`,
-      rowCount > 0 ? `先頭行の確認で構造を把握しましょう。` : "行は返されませんでした。"
-    ]);
-    renderQueryResult(resultSet);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    resultDescription.textContent = "クエリの実行中にエラーが発生しました。";
-    renderHighlights([message]);
-    clearQueryResult();
-  } finally {
-    db.close();
-  }
-}
+    function getEditorValue() {
+      if (monacoEditorInstance) {
+        return monacoEditorInstance.getValue();
+      }
+      return pendingEditorValue;
+    }
 
-function toggleTheme() {
-  const currentTheme = body.getAttribute("data-theme");
-  const nextTheme = currentTheme === "dark" ? "light" : "dark";
-  if (nextTheme === "light") {
-    body.removeAttribute("data-theme");
-  } else {
-    body.setAttribute("data-theme", "dark");
-  }
-  if (themeToggle) {
-    const isDark = nextTheme === "dark";
-    themeToggle.setAttribute("aria-pressed", String(isDark));
-    themeToggle.textContent = isDark ? "ライトモード" : "ダークモード";
-  }
-  updateEditorTheme();
-}
+    function focusEditor() {
+      monacoEditorInstance?.focus();
+    }
 
-themeToggle?.addEventListener("click", toggleTheme);
-runQueryButton?.addEventListener("click", () => {
-  runQueryAgainstDatabase();
-});
+    function createDatabaseFromSeed() {
+      if (!sqlModule || !databaseSeed) {
+        return null;
+      }
+      return new sqlModule.Database(databaseSeed.slice());
+    }
 
-menuToggle?.addEventListener("click", () => {
-  const expanded = menuToggle.getAttribute("aria-expanded") === "true";
-  menuToggle.setAttribute("aria-expanded", String(!expanded));
-  navLinks?.classList.toggle("is-open", !expanded);
-});
+    function clearQueryResult() {
+      queryResult.value = null;
+    }
 
-renderTimeline();
-renderQueryButtons();
+    function updateEditorTheme() {
+      if (!window.monaco || !monacoEditorInstance) {
+        return;
+      }
+      window.monaco.editor.setTheme(isDark.value ? "vs-dark" : "vs");
+    }
 
-function setEditorValue(value) {
-  if (monacoEditorInstance) {
-    monacoEditorInstance.setValue(value);
-  } else {
-    pendingEditorValue = value;
-  }
-}
+    function initializeMonacoEditor() {
+      if (!queryEditor.value || !window.monaco) {
+        return;
+      }
+      monacoEditorInstance = window.monaco.editor.create(queryEditor.value, {
+        value: pendingEditorValue,
+        language: "sql",
+        automaticLayout: true,
+        minimap: { enabled: false },
+        theme: isDark.value ? "vs-dark" : "vs",
+        fontSize: 14,
+        fontFamily: "'Fira Code', 'Noto Sans JP', monospace",
+        scrollBeyondLastLine: false,
+        wordWrap: "on",
+        padding: { top: 14, bottom: 14 }
+      });
+      pendingEditorValue = "";
+    }
 
-function getEditorValue() {
-  if (monacoEditorInstance) {
-    return monacoEditorInstance.getValue();
-  }
-  return pendingEditorValue;
-}
+    function applyQueryTemplate(template) {
+      selectedPhase.value = template.phase;
+      setEditorValue(template.sql);
+      focusEditor();
+      resultDescription.value = template.description;
+      resultHighlights.value = [...template.highlights];
+      clearQueryResult();
+    }
 
-function focusEditor() {
-  monacoEditorInstance?.focus();
-}
+    async function runQuery() {
+      const sql = getEditorValue().trim();
+      if (!sql) {
+        resultDescription.value = "クエリが入力されていません。テンプレートを選ぶか、SQL を記述してください。";
+        resultHighlights.value = [];
+        clearQueryResult();
+        return;
+      }
 
-function updateEditorTheme() {
-  if (!window.monaco || !monacoEditorInstance) {
-    return;
-  }
-  const isDark = body.getAttribute("data-theme") === "dark";
-  monaco.editor.setTheme(isDark ? "vs-dark" : "vs");
-}
+      try {
+        await databaseReady;
+      } catch (error) {
+        const message = databaseInitializationError?.message || (error instanceof Error ? error.message : String(error));
+        resultDescription.value = "データベースの初期化に失敗しました。ページを再読み込みしてください。";
+        resultHighlights.value = [message];
+        clearQueryResult();
+        return;
+      }
 
-function initializeMonacoEditor() {
-  if (!queryEditorContainer || !window.monaco) {
-    return;
-  }
-  monacoEditorInstance = monaco.editor.create(queryEditorContainer, {
-    value: pendingEditorValue,
-    language: "sql",
-    automaticLayout: true,
-    minimap: { enabled: false },
-    theme: body.getAttribute("data-theme") === "dark" ? "vs-dark" : "vs",
-    fontSize: 14,
-    fontFamily: "'Fira Code', 'Noto Sans JP', monospace",
-    scrollBeyondLastLine: false,
-    wordWrap: "on",
-    padding: { top: 14, bottom: 14 }
-  });
-  pendingEditorValue = "";
+      const db = createDatabaseFromSeed();
+      if (!db) {
+        resultDescription.value = "データベースの初期化に失敗しました。";
+        resultHighlights.value = [
+          databaseInitializationError?.message || "初期化処理を再度お試しください。"
+        ];
+        clearQueryResult();
+        return;
+      }
 
-  const observer = new MutationObserver(() => {
-    updateEditorTheme();
-  });
-  observer.observe(body, { attributes: true, attributeFilter: ["data-theme"] });
-}
+      try {
+        const resultSets = db.exec(sql);
 
-if (window.monacoLoader?.then) {
-  window.monacoLoader
-    .then(() => {
-      initializeMonacoEditor();
-    })
-    .catch((error) => {
-      console.error("Monaco editor failed to load", error);
+        if (!resultSets.length) {
+          resultDescription.value = "クエリは結果を返しませんでした。";
+          resultHighlights.value = [];
+          clearQueryResult();
+          return;
+        }
+
+        const [resultSet] = resultSets;
+        const rowCount = resultSet.values.length;
+        const columnCount = resultSet.columns.length;
+        resultDescription.value = `結果: ${rowCount} 行 / ${columnCount} 列`;
+        resultHighlights.value = [
+          `列: ${resultSet.columns.join(", ")}`,
+          rowCount > 0 ? "先頭行の確認で構造を把握しましょう。" : "行は返されませんでした。"
+        ];
+        queryResult.value = {
+          columns: resultSet.columns,
+          values: resultSet.values
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        resultDescription.value = "クエリの実行中にエラーが発生しました。";
+        resultHighlights.value = [message];
+        clearQueryResult();
+      } finally {
+        db.close();
+      }
+    }
+
+    function toggleTheme() {
+      theme.global.name.value = isDark.value ? "light" : "dark";
+    }
+
+    watch(
+      () => theme.global.name.value,
+      (value) => {
+        if (value === "dark") {
+          document.body.setAttribute("data-theme", "dark");
+        } else {
+          document.body.removeAttribute("data-theme");
+        }
+        updateEditorTheme();
+      },
+      { immediate: true }
+    );
+
+    onMounted(() => {
+      if (window.monacoLoader?.then) {
+        window.monacoLoader
+          .then(() => {
+            initializeMonacoEditor();
+          })
+          .catch((error) => {
+            console.error("Monaco editor failed to load", error);
+          });
+      }
     });
-}
+
+    return {
+      drawer,
+      navLinks,
+      skillPoints,
+      features,
+      lessons,
+      queryTemplates,
+      faqItems,
+      queryEditor,
+      resultDescription,
+      resultHighlights,
+      queryResult,
+      selectedPhase,
+      applyQueryTemplate,
+      runQuery,
+      toggleTheme,
+      themeButtonLabel,
+      themeIcon,
+      isDark
+    };
+  }
+})
+  .use(vuetify)
+  .mount("#app");
