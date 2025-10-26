@@ -1,0 +1,15 @@
+{
+  "name": "HTML + JS Web Dev",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ritwickdey.LiveServer",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  },
+  "forwardPorts": [5500],
+  "postCreateCommand": "npm init -y || true"
+}
