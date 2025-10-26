@@ -64,11 +64,14 @@ const queries = {
 
 const timelineContainer = document.getElementById("timeline");
 const queryButtonsContainer = document.getElementById("queryButtons");
-const queryEditor = document.getElementById("queryEditor");
+const queryEditorContainer = document.getElementById("queryEditor");
 const resultDescription = document.getElementById("resultDescription");
 const resultHighlights = document.getElementById("resultHighlights");
 const runQueryButton = document.getElementById("runQuery");
 const navLinks = document.getElementById("primaryNavigation");
+
+let monacoEditorInstance = null;
+let pendingEditorValue = "";
 
 function renderTimeline() {
   const fragment = document.createDocumentFragment();
@@ -103,7 +106,8 @@ function renderQueryButtons() {
 
 function applyQueryTemplate(phase) {
   const template = queries[phase];
-  queryEditor.value = template.sql;
+  setEditorValue(template.sql);
+  focusEditor();
   resultDescription.textContent = template.description;
   renderHighlights(template.highlights);
   runQueryButton.focus();
@@ -119,7 +123,7 @@ function renderHighlights(highlights) {
 }
 
 function simulateQueryRun() {
-  const sql = queryEditor.value.trim();
+  const sql = getEditorValue().trim();
   if (!sql) {
     resultDescription.textContent = "クエリが入力されていません。テンプレートを選ぶか、SQL を記述してください。";
     resultHighlights.innerHTML = "";
@@ -157,6 +161,7 @@ function toggleTheme() {
     themeToggle.setAttribute("aria-pressed", String(isDark));
     themeToggle.textContent = isDark ? "ライトモード" : "ダークモード";
   }
+  updateEditorTheme();
 }
 
 themeToggle?.addEventListener("click", toggleTheme);
@@ -170,3 +175,64 @@ menuToggle?.addEventListener("click", () => {
 
 renderTimeline();
 renderQueryButtons();
+
+function setEditorValue(value) {
+  if (monacoEditorInstance) {
+    monacoEditorInstance.setValue(value);
+  } else {
+    pendingEditorValue = value;
+  }
+}
+
+function getEditorValue() {
+  if (monacoEditorInstance) {
+    return monacoEditorInstance.getValue();
+  }
+  return pendingEditorValue;
+}
+
+function focusEditor() {
+  monacoEditorInstance?.focus();
+}
+
+function updateEditorTheme() {
+  if (!window.monaco || !monacoEditorInstance) {
+    return;
+  }
+  const isDark = body.getAttribute("data-theme") === "dark";
+  monaco.editor.setTheme(isDark ? "vs-dark" : "vs");
+}
+
+function initializeMonacoEditor() {
+  if (!queryEditorContainer || !window.monaco) {
+    return;
+  }
+  monacoEditorInstance = monaco.editor.create(queryEditorContainer, {
+    value: pendingEditorValue,
+    language: "sql",
+    automaticLayout: true,
+    minimap: { enabled: false },
+    theme: body.getAttribute("data-theme") === "dark" ? "vs-dark" : "vs",
+    fontSize: 14,
+    fontFamily: "'Fira Code', 'Noto Sans JP', monospace",
+    scrollBeyondLastLine: false,
+    wordWrap: "on",
+    padding: { top: 14, bottom: 14 }
+  });
+  pendingEditorValue = "";
+
+  const observer = new MutationObserver(() => {
+    updateEditorTheme();
+  });
+  observer.observe(body, { attributes: true, attributeFilter: ["data-theme"] });
+}
+
+if (window.monacoLoader?.then) {
+  window.monacoLoader
+    .then(() => {
+      initializeMonacoEditor();
+    })
+    .catch((error) => {
+      console.error("Monaco editor failed to load", error);
+    });
+}
