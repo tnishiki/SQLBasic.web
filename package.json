@@ -19,6 +19,7 @@
   "dependencies": {
     "monaco-editor": "^0.53.0",
     "sql.js": "^1.13.0",
-    "vue.js": "^0.3.2"
+    "vue.js": "^0.3.2",
+    "vuetify": "^3.10.7"
   }
 }
