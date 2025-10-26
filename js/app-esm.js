@@ -2,7 +2,7 @@
 // ESM: Vue (global) + Vuetify (global) + Monaco(ESM) + SQL.js(ESM, local wasm)
 
 import * as monaco from "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/esm/vs/editor/editor.api.js";
-import { loadSql } from "/sql/sql-wasm-bridge.js";
+import { loadSql } from "/js/sql-wasm-bridge.js";
 
 // --- Vuetify (global build) ---
 const { createApp } = window.Vue;
