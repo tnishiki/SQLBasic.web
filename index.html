@@ -209,33 +209,11 @@
         </v-app>
     </div>
 
-    <script>
-        window.monacoLoader = new Promise((resolve) => {
-            require.config({
-                paths: {
-                    vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs"
-                }
-            });
-
-            window.MonacoEnvironment = {
-                getWorkerUrl: function () {
-                    return (
-                        "data:text/javascript;charset=utf-8," +
-                        encodeURIComponent(`
-                            self.MonacoEnvironment = { baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/' };
-                            importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/base/worker/workerMain.js');
-                        `)
-                    );
-                }
-            };
-
-            require(["vs/editor/editor.main"], () => {
-                resolve();
-            });
-        });
-    </script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@3.6.9/dist/vuetify.js"></script>
-    <script src="js/app.js"></script>
+
+    <script type="module" src="js/app-esm.js"></script>
+
+    <!-- script src="js/app.js"></script -->
 </body>
 </html>
