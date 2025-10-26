@@ -4,8 +4,8 @@
 const wasmPath = '/sql/sql-wasm.wasm';
 
 export async function loadSql() {
-    // ESM 版 SQL.js CDN を動的 import
-    const initSqlJs = (await import("https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.min.js")).default;
+    // ESM 版 SQL.js を node_modules から動的 import
+    const initSqlJs = (await import("../node_modules/sql.js/dist/sql-wasm.js")).default;
 
     // local `/sql/sql-wasm.wasm` を参照
     const SQL = await initSqlJs({
