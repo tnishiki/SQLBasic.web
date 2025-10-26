@@ -81,8 +81,8 @@
                 </div>
                 <p>フェーズに応じたクエリテンプレートを選択すると、自動的にエディタへ挿入されます。</p>
                 <div class="query-buttons" id="queryButtons"></div>
-                <label for="queryEditor" class="visually-hidden">SQL エディタ</label>
-                <textarea id="queryEditor" aria-label="SQL エディタ"></textarea>
+                <label id="queryEditorLabel" class="visually-hidden">SQL エディタ</label>
+                <div id="queryEditor" class="code-editor" role="textbox" aria-labelledby="queryEditorLabel" aria-multiline="true"></div>
                 <button class="button primary" id="runQuery" type="button">実行イメージを見る</button>
             </div>
             <div class="lab-panel" aria-live="polite">
@@ -116,6 +116,32 @@
         <p>© 2024 SQLBasic.web. All rights reserved.</p>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <script>
+        window.monacoLoader = new Promise((resolve) => {
+            require.config({
+                paths: {
+                    vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs"
+                }
+            });
+
+            window.MonacoEnvironment = {
+                getWorkerUrl: function () {
+                    return (
+                        "data:text/javascript;charset=utf-8," +
+                        encodeURIComponent(`
+                            self.MonacoEnvironment = { baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/' };
+                            importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/base/worker/workerMain.js');
+                        `)
+                    );
+                }
+            };
+
+            require(["vs/editor/editor.main"], () => {
+                resolve();
+            });
+        });
+    </script>
     <script src="js/app.js" defer></script>
 </body>
 </html>
