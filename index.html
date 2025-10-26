@@ -77,14 +77,20 @@
             <div class="lab-panel">
                 <div class="section-title section-title--compact">
                     <span>SQL Lab</span>
-                    <h2 id="lab-heading">サンプルクエリを試す</h2>
+                    <h2 id="lab-heading">クエリを実行する</h2>
                 </div>
-                <p>フェーズに応じたクエリテンプレートを選択すると、自動的にエディタへ挿入されます。</p>
-                <div class="query-buttons" id="queryButtons"></div>
+                <div>
                 <label for="queryEditor" class="visually-hidden">SQL エディタ</label>
                 <textarea id="queryEditor" aria-label="SQL エディタ"></textarea>
+                </div>
+                <div>
                 <button class="button primary" id="runQuery" type="button">実行イメージを見る</button>
+                <p>フェーズに応じたクエリテンプレートを選択すると、自動的にエディタへ挿入されます。</p>
+                <div class="query-buttons" id="queryButtons"></div>
+                </div>
             </div>
+        </section>
+        <section id="lab-result" class="sql-lab" aria-labelledby="lab-heading">
             <div class="lab-panel" aria-live="polite">
                 <h3>結果プレビュー</h3>
                 <p id="resultDescription">クエリを選択すると、想定される出力と学習ポイントを表示します。</p>
